@@ -1,76 +1,63 @@
 import sqlite3
-import os
 
 class Database:
     def __init__(self, base, *args) -> None:
         """ Params: Nombre de la base de datos y nombres de los atributos """
         self.base = base
+        sArgs = ""
+        for arg in args:
+            sArgs += arg + ", " 
+        self.sArgs = sArgs[:-2]
         conn = sqlite3.connect(f"{base}.db")
+        self.params = params = f"('id' integer primary key autoincrement, {self.sArgs})"
         try:
-            conn.execute(f"create table {base} {args}")
+            sql = f"create table {base} {params}"
+            print(sql)
+            conn.execute(sql)
             print(f"Se creó la tabla {base}")                        
-
         except sqlite3.OperationalError:
             pass
         conn.close()
 
     def insert(self, *args):
         conn = sqlite3.connect(f"{self.base}.db")
-
-        conn.execute(f"INSERT INTO {self.base} \
-        VALUES {args}")
-
+        sql = f"INSERT INTO {self.base}({self.sArgs}) VALUES {args}"
+        print(sql)
+        conn.execute(sql)
         conn.commit()
         conn.close()
 
     def select(self):
         conn = sqlite3.connect(f"{self.base}.db")
+        rs = conn.execute(f"SELECT * FROM {self.base}")
+        for r in rs: print(r)
+        conn.close()
 
-        conn.execute(f"SELECT * FROM {self.base}")
-
+    def delete(self, id):
+        id = 0 if id=="" else id
+        conn = sqlite3.connect(f"{self.base}.db")
+        sql = f"DELETE FROM {self.base} WHERE id={id}"
+        print(sql)
+        rs = conn.execute(sql)
         conn.commit()
         conn.close()
 
+    def update(self, id, *args):
+        id = 0 if id=="" else id
+        conn = sqlite3.connect(f"{self.base}.db")
+        sql = f"Update alumno set nombre = ?, fecha_nac = ? where id = {id}"
+        columnValues = args
+        conn.execute(sql, columnValues)
+        conn.commit()
+        conn.close()
+    
 
-def crearBD():
-    input("Enter para volver al Menú")
-
-def insertar():
-    input("Enter para volver al Menú")
-
-def listar():
-    input("Enter para volver al Menú")
-
-def modificar():
-    input("Enter para volver al Menú")
-
-def borrar():
-    input("Enter para volver al Menú")
-
-def main():
-    op = ""
-    while op != "0":
-        os.system("clear")
-        print("\n\nMenú de Operaciones sobre Base de Datos\n\n")
-        print("1) Crear Base de Datos")
-        print("2) Insertar datos")
-        print("3) Listar datos")
-        print("4) Modificar datos")
-        print("5) Borrar datos")
-        print("0) Salir")
-
-        op = input("Ingrese opción: ")
-
-        match op:
-            case "1": crearBD()
-            case "2": insertar()
-            case "3": listar()
-            case "4": modificar()
-            case "5": borrar()
-
-    alumnos = Database("alumno", "nombre", "fecha_nac")
-    alumnos.insert("Pedro", "2001-02-02")
-    alumnos.select()
-
-if __name__ == '__main__':
-    main()
+alumnos = Database("alumno", "nombre", "fecha_nac")
+alumnos.insert("Juan", "2001-02-02")
+alumnos.insert("Pipo", "1991-02-03")
+alumnos.insert("Luis", "2111-02-04")
+alumnos.select()
+# id = input("A quien desea borrar? ")
+# alumnos.delete(id)
+alumnos.update(2, "Quico", "1987-11-11")
+alumnos.select()
